@@ -103,9 +103,111 @@ type Last<T extends any[]> = [any, ...P][[P['length']]]
  */
 type Pop<T extends any[]> = T extends [...infer P, any] ? P: T
 /**
- * promise.all实现 
+ * promise.all实现
+ * 返回数组类型： { [K in keyof T]: T[K] }
  */
 declare function PromiseAll<T extends readonly any[]>(values:[...T]):Promise<{ [K in keyof T]: T[K] extends Promise<infer R> ? R : T[K] extends number ? T[K] : number }>
-
-
-  
+/** 
+ * 查找满足某个类型的联合类型
+*/
+type LookUp<U, T> = U extends {type:T} ? U:never
+/**
+ * 去除字符串左侧空格
+ */
+type Space = ' ' | '\n' | '\t'
+type TrimLeft<S extends string> = S extends `${Space}${infer R}` ? TrimLeft<R> : S
+/**
+ * 去除字符串空格
+ */
+type Space = ' ' | '\n' | '\t'
+type Trim<S extends string> = S extends `${Space}${infer T}` | `${infer T}${Space}` ? Trim<T> : S;
+/**
+ * str replace From to To
+ */
+type Replace<S extends string, From extends string, To extends string> = 
+From extends '' ? S 
+: S extends `${infer F}${From}${infer L}` ? `${F}${To}${L}` : S 
+/**
+ * str replaceAll From to To
+ */
+type ReplaceAll<S extends string, From extends string, To extends string> = From extends '' ? S : S extends `${infer F}${From}${infer L}` ? `${F}${To}${ReplaceAll<L, From, To>}` : S;
+/**
+ * append argument
+ */
+type AppendArgument<Fn extends Function, A extends any> = Fn extends (...args: infer R) => infer T ? (...args: [...R, A]) => T : never
+/**
+ * 类型排列
+ */
+type Permutation<T, U = T> = [U] extends [never] ? [] : (T extends U  ? [T, ...Permutation<Exclude<U, T>>] : [])
+/**
+ * 字符串长度
+ * 设置初始值  T extends string[] = []
+ * 字符串类型提取：S extends `${infer F}${infer R}`
+ */
+type LengthOfString<S extends string, T extends string[] = []> = S extends `${infer F}${infer R}` ? LengthOfString<R, [F,...T]> : T['length']
+/** 
+ * 数组拍平 
+*/
+type Flatten<T extends any[], U extends any[] = []> = T extends [infer F, ...infer R] ? 
+F extends any[] ? Flatten<[...F, ...R], U> : Flatten<[...R], [...U, F]>  : U;
+/**
+ * 对象添加属性
+ */
+type AppendToObject<T, U extends keyof any, V> = {
+    [P in keyof T | U]: P extends keyof T ? T[P]: V
+}
+/** 
+ * 绝对值
+*/
+type Absolute<T extends number | string | bigint> = `${T}` extends `-${infer R2}` ? R2 : `${T}`
+/**
+ * 字符串改成联合类型
+ */
+type StringToUnion<T extends string> = T extends `${infer R1}${infer R2}` ? R1 | StringToUnion<R2> : never
+/**
+ * 对象类型合并
+ * 属性是否在对象类型中：K extends keyof S
+ */
+type Merge<F extends object, S extends object> = {
+    [K in keyof F | keyof S]: K extends keyof S ? S[K] : K extends keyof F ? F[K] : never
+}
+/**
+ * Replace the `camelCase` or `PascalCase` string with `kebab-case`.
+ */
+type KebabCase<S extends string> = S extends `${infer R1}${infer R2}` ? R2 extends Uncapitalize<R2> ? `${Uncapitalize<R1>}${KebabCase<R2>}` : `${Uncapitalize<R1>}-${KebabCase<R2>}` : S 
+/**
+ * Get an Object that is the difference between O & O1
+ */
+type Diff<O, O1> = Omit<O & O1, keyof (O|O1)>
+/**
+ * Implement Python liked any function in the type system. A type takes the Array and returns true if any element of the Array is true. If the Array is empty, return false.
+ */
+type P = 0 | '' | false | [] | {[key:string]:never} | undefined | null
+type AnyOf<T extends readonly any[]> = T[number] extends P ? false:true
+/**
+ * Implement a type IsNever, which takes input type T. If the type of resolves to never, return true, otherwise false.
+ */
+type IsNever<T> = [T] extends [never] ? true:false
+/**
+ * 判断是否联合类型
+ */
+type IsUnion<T, U extends T = T> = (T extends T ? U extends T ? true:unknown: never) extends true ? false:true 
+/**
+ * U中的T属性Y中同属性类型
+ */
+type ReplaceKeys<U, T, Y> = {
+    [K in keyof U]: K extends T ? K extends keyof Y ? Y[K]:never : U[K]
+  }
+/**
+ * Remove Index Signature
+ */
+type RemoveIndexSignature<T, P = PropertyKey> = {
+    [K in keyof T as P extends K ? never: K extends P ? K:never]: T[K] 
+  }
+/**
+ * type PString2 = "+85%"
+ * type R2 = PercentageParser<PString2> // expected ["+", "85", "%"]
+ */
+type Prefix<T> = T extends '+' | '-' ? T : never;
+type Suffix<T> = T extends `${infer R}${'%'}` ? [R, '%'] : [T, '']; 
+type PercentageParser<A extends string> = A extends `${Prefix<infer L>}${infer R}` ? [L, ...Suffix<R>] : ['', ...Suffix<A>];
