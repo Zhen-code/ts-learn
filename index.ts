@@ -2,7 +2,7 @@
  * 接口遍历keyof，联合类型遍历in
  */
  type MyPick<T, K extends keyof T> = {
-    [P in K]: T[P] 
+    [P in K]: T[P]
   }
 /**
  * 设置接口属性只读
@@ -61,16 +61,16 @@ type MyReturnType<T extends Function> = T extends (...args:any[]) => infer P ? P
  * 遍历接口类型的key声明变量使用as
  */
 type MyOmit<T, K extends keyof T> = {
-    [P in keyof T as P extends K ? never:P]: T[P] 
+    [P in keyof T as P extends K ? never:P]: T[P]
 }
 /**
- * 设置接口部分所需的属性为只读 
+ * 设置接口部分所需的属性为只读
  */
 type MyReadonly2<T, K extends keyof T = keyof T> = {
     readonly [P in keyof T as P extends K ? P: never ]: T[P]
   } & {
     [P in keyof T as P extends K ? never: P ]: T[P]
-} 
+}
 /**
  * 判断是否对象或数组  extends Record<any,any>
  */
@@ -107,7 +107,7 @@ type Pop<T extends any[]> = T extends [...infer P, any] ? P: T
  * 返回数组类型： { [K in keyof T]: T[K] }
  */
 declare function PromiseAll<T extends readonly any[]>(values:[...T]):Promise<{ [K in keyof T]: T[K] extends Promise<infer R> ? R : T[K] extends number ? T[K] : number }>
-/** 
+/**
  * 查找满足某个类型的联合类型
 */
 type LookUp<U, T> = U extends {type:T} ? U:never
@@ -124,9 +124,9 @@ type Trim<S extends string> = S extends `${Space}${infer T}` | `${infer T}${Spac
 /**
  * str replace From to To
  */
-type Replace<S extends string, From extends string, To extends string> = 
-From extends '' ? S 
-: S extends `${infer F}${From}${infer L}` ? `${F}${To}${L}` : S 
+type Replace<S extends string, From extends string, To extends string> =
+From extends '' ? S
+: S extends `${infer F}${From}${infer L}` ? `${F}${To}${L}` : S
 /**
  * str replaceAll From to To
  */
@@ -145,10 +145,10 @@ type Permutation<T, U = T> = [U] extends [never] ? [] : (T extends U  ? [T, ...P
  * 字符串类型提取：S extends `${infer F}${infer R}`
  */
 type LengthOfString<S extends string, T extends string[] = []> = S extends `${infer F}${infer R}` ? LengthOfString<R, [F,...T]> : T['length']
-/** 
- * 数组拍平 
+/**
+ * 数组拍平
 */
-type Flatten<T extends any[], U extends any[] = []> = T extends [infer F, ...infer R] ? 
+type Flatten<T extends any[], U extends any[] = []> = T extends [infer F, ...infer R] ?
 F extends any[] ? Flatten<[...F, ...R], U> : Flatten<[...R], [...U, F]>  : U;
 /**
  * 对象添加属性
@@ -156,7 +156,7 @@ F extends any[] ? Flatten<[...F, ...R], U> : Flatten<[...R], [...U, F]>  : U;
 type AppendToObject<T, U extends keyof any, V> = {
     [P in keyof T | U]: P extends keyof T ? T[P]: V
 }
-/** 
+/**
  * 绝对值
 */
 type Absolute<T extends number | string | bigint> = `${T}` extends `-${infer R2}` ? R2 : `${T}`
@@ -174,7 +174,7 @@ type Merge<F extends object, S extends object> = {
 /**
  * Replace the `camelCase` or `PascalCase` string with `kebab-case`.
  */
-type KebabCase<S extends string> = S extends `${infer R1}${infer R2}` ? R2 extends Uncapitalize<R2> ? `${Uncapitalize<R1>}${KebabCase<R2>}` : `${Uncapitalize<R1>}-${KebabCase<R2>}` : S 
+type KebabCase<S extends string> = S extends `${infer R1}${infer R2}` ? R2 extends Uncapitalize<R2> ? `${Uncapitalize<R1>}${KebabCase<R2>}` : `${Uncapitalize<R1>}-${KebabCase<R2>}` : S
 /**
  * Get an Object that is the difference between O & O1
  */
@@ -191,7 +191,7 @@ type IsNever<T> = [T] extends [never] ? true:false
 /**
  * 判断是否联合类型
  */
-type IsUnion<T, U extends T = T> = (T extends T ? U extends T ? true:unknown: never) extends true ? false:true 
+type IsUnion<T, U extends T = T> = (T extends T ? U extends T ? true:unknown: never) extends true ? false:true
 /**
  * U中的T属性Y中同属性类型
  */
@@ -202,12 +202,51 @@ type ReplaceKeys<U, T, Y> = {
  * Remove Index Signature
  */
 type RemoveIndexSignature<T, P = PropertyKey> = {
-    [K in keyof T as P extends K ? never: K extends P ? K:never]: T[K] 
+    [K in keyof T as P extends K ? never: K extends P ? K:never]: T[K]
   }
 /**
  * type PString2 = "+85%"
  * type R2 = PercentageParser<PString2> // expected ["+", "85", "%"]
  */
 type Prefix<T> = T extends '+' | '-' ? T : never;
-type Suffix<T> = T extends `${infer R}${'%'}` ? [R, '%'] : [T, '']; 
+type Suffix<T> = T extends `${infer R}${'%'}` ? [R, '%'] : [T, ''];
 type PercentageParser<A extends string> = A extends `${Prefix<infer L>}${infer R}` ? [L, ...Suffix<R>] : ['', ...Suffix<A>];
+
+/**
+ * 去除字符串空格
+ */
+type DropChar<S, C extends string> = S extends `${infer L}${C}${infer R}` ? DropChar<`${L}${R}`, C> : S
+/**
+ * 判断是否以U开头
+ */
+type StartsWith<T extends string, U extends string> = T extends `${U}${infer P}` ? true:false
+/**
+ * 两个对象遍历类型进行合并后需要使用对象类型再次遍历后返回
+ * K extends keyof T = any：设置K约束为T中的属性类型，若K为空则与any类型一致
+ */
+type IntersectionToObj<T> = {
+  [P in keyof T]: T[P]
+}
+type PartialByKeys<T, K extends keyof T = any> = IntersectionToObj<{
+ [P in keyof T as P extends K ? P:never]?: T[P]
+} & {
+[P in Exclude<keyof T, K>]: T[P]
+}>
+
+// 设置BEM格式
+// type cases = [
+//     Expect<Equal<BEM<'btn', ['price'], []>, 'btn__price'>>,
+//     Expect<Equal<BEM<'btn', ['price'], ['warning', 'success']>, 'btn__price--warning' | 'btn__price--success' >>,
+//     Expect<Equal<BEM<'btn', [], ['small', 'medium', 'large']>, 'btn--small' | 'btn--medium' | 'btn--large' >>,
+// ]
+type isNever<T> = T extends never ? true:false
+type isUnion<T> = isNever<T> extends true ? "" : T
+type BEM<B extends string, E extends string[], M extends string[]> = `${B}${isUnion<`__${E[number]}`>}${isUnion<`--${M[number]}`>}`
+
+// inorder binary tree
+interface TreeNode {
+    val: number
+    left: TreeNode | null
+    right: TreeNode | null
+}
+type InorderTraversal<T extends TreeNode | null> = [T] extends [TreeNode] ? [...InorderTraversal<T['left']>, T['val'], ...InorderTraversal<T['right']>]:[]
