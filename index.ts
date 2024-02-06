@@ -250,3 +250,134 @@ interface TreeNode {
     right: TreeNode | null
 }
 type InorderTraversal<T extends TreeNode | null> = [T] extends [TreeNode] ? [...InorderTraversal<T['left']>, T['val'], ...InorderTraversal<T['right']>]:[]
+
+/**
+ *  Flip<{ a: "x", b: "y", c: "z" }>; // {x: 'a', y: 'b', z: 'c'}
+ * */
+type Flip<T> = {
+    [K in keyof T as `${T[K]}`]: K
+}
+/*
+* Fibonacci:类型声明非获取真实值
+* */
+type Fibonacci<T extends number, N extends number[] = [1], Prev extends any[] = [], Current extends any[] = [1]> =
+    T extends N['length'] ? Current['length']: Fibonacci<T, [...N, 1], Current, [...Prev, ...Current]>
+
+/**
+ * Expect<Equal<Zip<[], []>, []>>,
+  Expect<Equal<Zip<[1, 2], [true, false]>, [[1, true], [2, false]]>>,
+  Expect<Equal<Zip<[1, 2, 3], ['1', '2', '3']>, [[1, '1'], [2, '2'], [3, '3']]>>,
+  Expect<Equal<Zip<[], [1, 2, 3]>, []>>,
+  Expect<Equal<Zip<[[1, 2]], [3]>, [[[1, 2], 3]]>>,
+  Expect<Equal<Zip<[1, 2, 3], ['1', '2']>, [[1, '1'], [2, '2']]>>
+  变量声明：infer    数组类型判断：Arr extends [infer A, ...infer B]
+ */
+type Zip<T, U, R extends any[] = []> = T extends [infer R1, ...infer R2] ? U extends [infer R3, ...infer R4] ? Zip<R2,R4,[...R,[R1, R3]]> : R : R
+
+/**
+ * 元组判断：长度固定且只读
+ * 判断是否never [T] extends [never]
+ * number只能继承number类型，不能继承具体数字
+ */
+type IsTuple<T> =
+  [T] extends [never] ? false:
+  T extends readonly any[]?
+    number extends T['length']?false:true
+  :false
+
+
+  /**
+   * Expect<Equal<Chunk<[], 1>, []>>,
+  Expect<Equal<Chunk<[1, 2, 3], 1>, [[1], [2], [3]]>>,
+   */
+  type Chunk<
+  T extends any[], // 原始数组类型
+  N extends number, // 每个子数组的长度
+  Swap extends any[] = [] // 用于存储当前子数组的变量
+> =
+  Swap['length'] extends N // 如果当前子数组的长度已经达到了 N
+    ? [Swap, ...Chunk<T, N>] // 将当前子数组加入结果数组中，继续拆分剩余部分
+    : T extends [infer K, ...infer L] // 如果原始数组还有剩余部分
+      ? Chunk<L, N, [...Swap, K]> // 将下一个元素加入当前子数组中，继续拆分剩余部分
+      : Swap extends [] ? Swap : [Swap] // 如果原始数组已经被拆分完毕，则返回最后一个子数组
+
+/**
+ * Expect<Equal<Fill<[1, 2, 3], true>, [true, true, true]>>,
+  Expect<Equal<Fill<[1, 2, 3], true, 0, 1>, [true, 2, 3]>>,
+  Expect<Equal<Fill<[1, 2, 3], true, 1, 3>, [1, true, true]>>,
+  Expect<Equal<Fill<[1, 2, 3], true, 10, 0>, [1, 2, 3]>>,
+  Expect<Equal<Fill<[1, 2, 3], true, 10, 20>, [1, 2, 3]>>,
+ * 
+ */
+      type Fill<
+      T extends unknown[],
+      N,
+      Start extends number = 0,
+      End extends number = T['length'],
+      Count extends any[] = [],
+      Flag extends boolean = Count['length'] extends Start ? true:false
+    > = Count['length'] extends End ? T : T extends [infer F, ...infer R] ?
+    Flag extends false ? [F, ...Fill<R, N, Start, End, [...Count, 0]>]: [N, ...Fill<R, N, Start, End, [...Count, 0], Flag>] : T
+
+
+    /**
+     * 去除右边空格字符
+     */
+    type TrimRight<S extends string> = S extends `${infer L}${' ' | '\n' | '\t'}` ? TrimRight<L>:S
+
+
+    /**
+     * Expect<Equal<Trunc<-5.1>, '-5'>>,
+  Expect<Equal<Trunc<'.3'>, '0'>>,
+  Expect<Equal<Trunc<'1.234'>, '1'>>,
+     */
+    type Trunc<U extends number|string, T = `${U}`> = T extends `${infer L}.${infer R}` ? L extends "" ? '0' : L : T
+
+/**
+ * Expect<Equal<Join<['2', '2', '2'], 1>, '21212'>>,
+   Expect<Equal<Join<['o'], 'u'>, 'o'>>,
+ */
+type Join<T extends unknown[], U extends string|number, R extends any = ''> = T extends [infer F, ...infer Rest] ? Rest extends [] ? 
+Join<Rest, U, `${R}${F}`> : Join<Rest, U, `${R}${F}${U}`> : `${R}`
+
+/**
+ *  Expect<Equal<LastIndexOf<[0, 0, 0], 2>, -1>>,
+  Expect<Equal<LastIndexOf<[string, 2, number, 'a', number, 1], number>, 4>>,
+  isEqual:判断any类型是否相等
+ */
+type isEqual<T, U> = U extends T ? T extends U ? true : false : false
+type LastIndexOf<T extends any[], U> = T extends [...infer F, infer Rest] ? isEqual<Rest, U> extends true ? F['length'] : LastIndexOf<F, U> : -1
+
+/**
+ * Equal内置解决any与unknown相等问题
+ */
+type Arrhas<T extends any[] = [], U extends any = any> = T extends [infer F, ...infer Rest] ? Equal<F, U> extends true ? true : Arrhas<Rest, U>:false  
+type Unique<T extends any[], U extends any[] = []> = T extends [infer F, ...infer Rest] ? Arrhas<U, F> extends false ? Unique<Rest, [...U, F]> : Unique<Rest, U> : U
+
+/**
+  Expect<Equal<MapTypes<{ name: string, date: Date }, { mapFrom: string, mapTo: boolean } | { mapFrom: Date, mapTo: string }>, { name: boolean, date: string }>>,
+ * 排除联合类型使用extends判断，不符合则设为never
+ */
+type MapTypes<T, R extends {mapFrom: any, mapTo: any}> = {
+  [P in keyof T]: T[P] extends R['mapFrom'] ? R extends {mapFrom:T[P]} ? R['mapTo']:never:T[P]
+}
+
+/**
+ * type result = NumberRange<2 , 9> //  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+ */
+type A<T extends number, U extends any[] = []> = U['length'] extends T ? U: A<T,[...U,1]>
+type NumberRange<
+  L extends number,
+  H extends number,
+  Idx extends 1[] = L extends 0 ? [] : A<L>,
+  Res = never
+> = 
+Idx['length'] extends H ? H|Res : NumberRange<L,H,[...Idx,1],Idx['length']|Res>
+
+/**
+ * type cases = [
+  Expect<Equal<Combination<['foo', 'bar', 'baz']>, 'foo' | 'bar' | 'baz' | 'foo bar' | 'foo bar baz' | 'foo baz' | 'foo baz bar' | 'bar foo' | 'bar foo baz' | 'bar baz' | 'bar baz foo' | 'baz foo' | 'baz foo bar' | 'baz bar' | 'baz bar foo'>>,
+]
+ */
+type Combination<T extends string[], All extends string = T[number], Item extends string = All> = 
+Item extends string ? Item | `${Item} ${Combination<[],Exclude<All, Item>>}` : never  
