@@ -380,4 +380,34 @@ Idx['length'] extends H ? H|Res : NumberRange<L,H,[...Idx,1],Idx['length']|Res>
 ]
  */
 type Combination<T extends string[], All extends string = T[number], Item extends string = All> = 
-Item extends string ? Item | `${Item} ${Combination<[],Exclude<All, Item>>}` : never  
+Item extends string ? Item | `${Item} ${Combination<[],Exclude<All, Item>>}` : never 
+
+/**
+ *  type CheckRepeatedChars<'abc'>   // false
+  type CheckRepeatedChars<'aba'>   // true
+ */
+type CheckRepeatedChars<T extends string> = T extends `${infer F}${infer E}` ? `${E}` extends `${string}${F}${string}` ? true: CheckRepeatedChars<E>:false
+
+/**
+ * ParseUrlParams<':id'> // id
+  ParseUrlParams<'posts/:id'> // id
+  ParseUrlParams<'posts/:id/:user'> // id | user
+ */
+type ParseUrlParams<T extends string, U extends any[] = []> = T extends `${string}:${infer Rest}` ? 
+Rest extends `${infer P}/${infer E}` ? P | ParseUrlParams<E>: Rest : never 
+
+/**
+ * type simple1 = GetMiddleElement<[1, 2, 3, 4, 5]>, // 返回 [3]
+    type simple2 = GetMiddleElement<[1, 2, 3, 4, 5, 6]> // 返回 [3, 4]
+ */
+type GetMiddleElement<T extends any[]> = T['length'] extends 0 | 1 | 2 ? T : T extends [any, ...infer Rest, any] ? GetMiddleElement<Rest>:never
+
+/**
+ * Expect<Equal<FindEles<[2, 2, 3, 3, 6, 6, 6]>, []>>,
+  Expect<Equal<FindEles<[1, 2, 3]>, [1, 2, 3]>>,
+  单元素是否被数组已包含：F extends Rest[number]
+ */
+type FindEles<T extends any[], U = never> = T extends [infer F, ...infer Rest] ? 
+F extends U ? FindEles<Rest, U> : F extends Rest[number] ? FindEles<Rest, F | U> 
+: [F, ...FindEles<Rest, U>] : []
+
